@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Restrito - Matrícula Alternativa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 1.5rem;
+        }
+        
+        .login-card {
+            max-width: 400px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header style="justify-content: center;">
+        <div class="logo-area">
+            <div class="logo-indicator"></div>
+            <h1>Matrícula Alternativa</h1>
+        </div>
+    </header>
+
+    <div class="login-container">
+        <div class="card login-card">
+            <div class="login-logo">Acesso Restrito</div>
+            <div class="login-desc">Insira a chave de acesso para desbloquear o aplicativo.</div>
+            
+            <form action="/login" method="POST" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div class="form-group" style="text-align: left;">
+                    <label for="gate-password">Chave de Acesso</label>
+                    <input type="password" id="gate-password" name="password" placeholder="Digite a senha..." required autofocus>
+                    {% if error %}
+                        <span class="error-message">{{ error }}</span>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Desbloquear
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content" style="justify-content: center;">
+            <span>Matrícula Alternativa - Local App</span>
+        </div>
+    </footer>
+</body>
+</html>

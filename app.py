@@ -1,11 +1,16 @@
+import os
 import threading
 import time
 import json
 import queue
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, session, redirect, url_for
 from playwright.sync_api import sync_playwright
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default-safe-secret-key-unb')
 
 # Fila para transmitir logs em tempo real para o frontend
 log_queue = queue.Queue()
@@ -257,6 +262,33 @@ def run_automation(username, password, delay, disciplines):
         log_msg('error', f'Erro crítico na automação: {str(e)}', 'error')
     finally:
         cleanup()
+
+@app.before_request
+def require_login():
+    # Permite acesso ao login e arquivos estáticos sem autenticação
+    if request.endpoint in ['login_gate', 'static']:
+        return
+        
+    if not session.get('authenticated'):
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Acesso não autorizado. Autentique-se primeiro.'}), 401
+        return redirect(url_for('login_gate'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_gate():
+    if session.get('authenticated'):
+        return redirect(url_for('index'))
+        
+    error = None
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == os.environ.get('GATE_PASSWORD', 'default-gate-pass'):
+            session['authenticated'] = True
+            return redirect(url_for('index'))
+        else:
+            error = 'Senha incorreta. Tente novamente.'
+            
+    return render_template('login.html', error=error)
 
 @app.route('/')
 def index():
