@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const consoleLog = document.getElementById('console-log');
     const statusDot = document.getElementById('global-status-dot');
     const statusText = document.getElementById('global-status-text');
+    const enrollmentStatus = document.getElementById('enrollment-status');
     
     let eventSource = null;
 
@@ -77,6 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     appendLog(data.type, data.message);
                 }
                 
+                if (data.enrollment_status) {
+                    if (data.enrollment_status === 'open') {
+                        enrollmentStatus.innerText = 'Aberto';
+                        enrollmentStatus.style.color = '#10b981';
+                    } else if (data.enrollment_status === 'closed') {
+                        enrollmentStatus.innerText = 'Fechado';
+                        enrollmentStatus.style.color = '#f43f5e';
+                    }
+                }
+                
                 if (data.status === 'finished' || data.status === 'stopped' || data.status === 'error') {
                     disconnectLogs();
                     btnStart.disabled = false;
@@ -134,6 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnStart.disabled = true;
         btnStop.disabled = false;
         setStatus('running');
+        enrollmentStatus.innerText = 'Verificando...';
+        enrollmentStatus.style.color = '#f59e0b';
         clearLog();
         appendLog('info', 'Iniciando conexão com o assistente...');
 

@@ -21,13 +21,16 @@ class AutomationState:
 
 state = AutomationState()
 
-def log_msg(msg_type, message, status='running'):
+def log_msg(msg_type, message, status='running', enrollment_status=None):
     """Envia uma mensagem de log para a fila SSE."""
-    log_queue.put({
+    data = {
         'type': msg_type,
         'message': message,
         'status': status
-    })
+    }
+    if enrollment_status:
+        data['enrollment_status'] = enrollment_status
+    log_queue.put(data)
 
 def cleanup():
     """Fecha o navegador e limpa os estados da automação."""
@@ -124,16 +127,38 @@ def run_automation(username, password, delay, disciplines):
                 log_msg('warning', f'Não foi possível navegar automaticamente pelo menu: {str(e)}')
                 log_msg('action', 'Por favor, clique em Ensino > Matrícula On-Line > Realizar Matrícula manualmente no navegador.')
             
-            # Aguarda a página de matrícula/instruções carregar
+            # Aguarda a página de matrícula/instruções carregar e verifica se o período está aberto
             try:
-                state.page.wait_for_selector("text=/Iniciar seleção/i", timeout=30000)
-                # Clica em "Iniciar seleção de turmas"
+                state.page.wait_for_load_state("networkidle", timeout=10000)
+            except Exception:
+                pass
+
+            time.sleep(2.0)
+            page_text = state.page.content().lower()
+            
+            # Palavras-chave comuns do SIGAA quando a matrícula está fechada
+            closed_keywords = [
+                "fora do período", "não está ativo", "fora do prazo", "não iniciado", 
+                "suspenso", "não permitido", "período de matrícula encerrado", 
+                "não existe período", "nenhum período de matrícula"
+            ]
+            
+            is_closed = any(kw in page_text for kw in closed_keywords)
+            
+            if is_closed:
+                log_msg('error', 'O período de matrícula está FECHADO/INATIVO no SIGAA!', enrollment_status='closed')
+            else:
+                log_msg('success', 'O período de matrícula está ABERTO!', enrollment_status='open')
+
+            try:
+                state.page.wait_for_selector("text=/Iniciar seleção/i", timeout=15000)
+                log_msg('success', 'Período de matrícula confirmado como ABERTO!', enrollment_status='open')
                 state.page.locator("text=/Iniciar seleção/i").first.click()
                 log_msg('success', 'Seleção de turmas iniciada!')
                 time.sleep(delay / 1000.0)
             except Exception as e:
-                log_msg('warning', 'Botão "Iniciar seleção de turmas" não pôde ser clicado automaticamente.')
-                log_msg('action', 'Por favor, clique em "Iniciar seleção de turmas" no navegador se necessário.')
+                log_msg('warning', 'Não localizei o botão "Iniciar seleção de turmas" automaticamente.')
+                log_msg('action', 'Por favor, verifique o status da matrícula no navegador e clique em "Iniciar seleção" se disponível.')
                 
             # 3. Processa cada disciplina da lista
             for disc in disciplines:
