@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const delay = parseInt(document.getElementById('step-delay').value) || 2000;
+        const mode = document.getElementById('mode').value;
         
         if (!username || !password) {
             appendLog('error', 'Por favor, insira o usuário e a senha.');
@@ -158,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, delay, disciplines })
+                body: JSON.stringify({ username, password, delay, disciplines, mode })
             });
             const data = await response.json();
             if (response.status !== 200) {

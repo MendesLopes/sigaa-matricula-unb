@@ -51,7 +51,7 @@ def cleanup():
     state.page = None
     state.playwright_instance = None
 
-def run_automation(username, password, delay, disciplines):
+def run_automation(username, password, delay, disciplines, mode='real'):
     """Executa a automação de matrícula via Playwright."""
     global state
     state.is_running = True
@@ -66,9 +66,13 @@ def run_automation(username, password, delay, disciplines):
             state.context = state.browser.new_context(no_viewport=True)
             state.page = state.context.new_page()
             
-            # 1. Navega para a página de login CAS da UnB
-            log_msg('info', 'Acessando portal de autenticação unificada da UnB...')
-            state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
+            # 1. Navega para a página de login (Real ou Mock)
+            if mode == 'didatico':
+                log_msg('info', 'Acessando portal de login SIMULADO (Modo Didático)...')
+                state.page.goto("http://127.0.0.1:5000/mock/login")
+            else:
+                log_msg('info', 'Acessando portal de autenticação unificada da UnB (Real)...')
+                state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
             
             # Aguarda carregar o campo de login
             state.page.wait_for_selector("#username", timeout=30000)
@@ -265,8 +269,8 @@ def run_automation(username, password, delay, disciplines):
 
 @app.before_request
 def require_login():
-    # Permite acesso ao login e arquivos estáticos sem autenticação
-    if request.endpoint in ['login_gate', 'static']:
+    # Permite acesso ao login, arquivos estáticos e simulador sem autenticação do painel principal
+    if request.endpoint in ['login_gate', 'static', 'mock_login', 'mock_portal', 'mock_matricula', 'mock_selecao']:
         return
         
     if not session.get('authenticated'):
@@ -294,6 +298,27 @@ def login_gate():
 def index():
     return render_template('index.html')
 
+# --- ROTAS DE SIMULAÇÃO (MOCK / VERSÃO DIDÁTICA) ---
+
+@app.route('/mock/login', methods=['GET', 'POST'])
+def mock_login():
+    if request.method == 'POST':
+        # Qualquer login e captcha funcionam no mock para facilitar testes
+        return redirect(url_for('mock_portal'))
+    return render_template('mock_login.html')
+
+@app.route('/mock/portal')
+def mock_portal():
+    return render_template('mock_portal.html')
+
+@app.route('/mock/matricula')
+def mock_matricula():
+    return render_template('mock_matricula.html')
+
+@app.route('/mock/selecao')
+def mock_selecao():
+    return render_template('mock_selecao.html')
+
 @app.route('/api/start', methods=['POST'])
 def start_bot():
     global state
@@ -305,6 +330,7 @@ def start_bot():
     password = data.get('password')
     delay = data.get('delay', 2000)
     disciplines = data.get('disciplines', [])
+    mode = data.get('mode', 'real')
     
     if not username or not password:
         return jsonify({'error': 'Credenciais inválidas.'}), 400
@@ -322,7 +348,7 @@ def start_bot():
     # Inicia a automação em uma thread secundária
     state.thread = threading.Thread(
         target=run_automation, 
-        args=(username, password, delay, disciplines),
+        args=(username, password, delay, disciplines, mode),
         daemon=True
     )
     state.thread.start()

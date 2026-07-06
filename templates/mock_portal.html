@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Discente (SIMULADO)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f7f9fa;
+        }
+        .header {
+            background-color: #0d47a1;
+            color: white;
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+        .nav-bar {
+            background-color: #1565c0;
+            display: flex;
+            padding: 0 2rem;
+        }
+        .menu-item {
+            position: relative;
+            color: white;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .menu-item:hover {
+            background-color: #0d47a1;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border: 1px solid #ccc;
+            min-width: 200px;
+            z-index: 1000;
+        }
+        .menu-item:hover .dropdown {
+            display: block;
+        }
+        .dropdown-item {
+            position: relative;
+            color: #333;
+            padding: 0.6rem 1rem;
+            text-decoration: none;
+            display: block;
+            font-size: 0.85rem;
+            font-weight: normal;
+        }
+        .dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
+        .sub-dropdown {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 100%;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            border: 1px solid #ccc;
+            min-width: 200px;
+        }
+        .dropdown-item:hover .sub-dropdown {
+            display: block;
+        }
+        .content {
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border-left: 4px solid #1565c0;
+        }
+        .warning-banner {
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid #ffeeba;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-banner">
+        AMBIENTE SIMULADO (FINS DIDÁTICOS) - SIGAA MOCK
+    </div>
+    
+    <div class="header">
+        <h1>SIGAA - Sistema de Gestão de Atividades Acadêmicas</h1>
+        <div>Estudante Logado: <strong>Aluno Didático</strong></div>
+    </div>
+    
+    <div class="nav-bar">
+        <div class="menu-item" id="menu-ensino">
+            Ensino
+            <div class="dropdown">
+                <a href="#" class="dropdown-item">Meus Dados</a>
+                <div class="dropdown-item">
+                    Matrícula On-Line
+                    <div class="sub-dropdown">
+                        <a href="/mock/matricula" class="dropdown-item">Realizar Matrícula</a>
+                        <a href="#" class="dropdown-item">Ver Comprovante</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="menu-item">Pesquisa</div>
+        <div class="menu-item">Extensão</div>
+    </div>
+    
+    <div class="content">
+        <div class="card">
+            <h3>Bem-vindo ao Portal do Discente!</h3>
+            <p>Este é um ambiente simulado para fins de teste seguro e didático da ferramenta de matrícula.</p>
+            <p>Para testar o robô, aguarde que ele clique ou passe o mouse em <strong>Ensino > Matrícula On-Line > Realizar Matrícula</strong> no menu acima.</p>
+        </div>
+    </div>
+</body>
+</html>

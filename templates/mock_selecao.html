@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleção de Turmas (SIMULADO)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fa;
+            margin: 0;
+            padding: 1.5rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 2px solid #0d47a1;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h2 {
+            margin: 0;
+            color: #0d47a1;
+        }
+        .warning-tag {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 1px solid #ffeeba;
+        }
+        .search-box {
+            background: #f1f3f5;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+        label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        input[type="submit"] {
+            background-color: #1565c0;
+            color: white;
+            border: none;
+            padding: 0.55rem 1.5rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0d47a1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        th {
+            background-color: #f1f3f5;
+            color: #333;
+        }
+        .result-section {
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+        .action-link {
+            color: #1565c0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .action-link:hover {
+            text-decoration: underline;
+        }
+        .selected-list {
+            margin-top: 2rem;
+            border-top: 2px solid #2e7d32;
+            padding-top: 1rem;
+        }
+        .selected-list h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+    </style>
+    <script>
+        function realizarBusca(event) {
+            event.preventDefault();
+            const code = document.getElementById('form:codigo').value.trim().toUpperCase();
+            
+            // Oculta todas as seções de resultado
+            document.querySelectorAll('.result-section').forEach(el => el.style.display = 'none');
+            
+            const targetId = 'result-' + code;
+            const targetEl = document.getElementById(targetId);
+            
+            if (targetEl) {
+                targetEl.style.display = 'block';
+            } else {
+                alert('Nenhuma disciplina encontrada no simulador com o código: ' + code + '\nTente: CIC0004, MAT0025 ou EST0023.');
+            }
+        }
+        
+        function adicionarTurma(codigo, turma, event) {
+            event.preventDefault();
+            
+            const tableBody = document.getElementById('selected-table-body');
+            const noRows = document.getElementById('no-selected-row');
+            if (noRows) noRows.remove();
+            
+            // Verifica se já está adicionado
+            const existingId = `sel-${codigo}-${turma}`;
+            if (document.getElementById(existingId)) {
+                alert('Esta turma já foi adicionada!');
+                return;
+            }
+            
+            const row = document.createElement('tr');
+            row.id = existingId;
+            row.innerHTML = `
+                <td>${codigo}</td>
+                <td>Turma ${turma}</td>
+                <td>Adicionado via Simulação</td>
+                <td><a href="#" class="action-link" style="color:red;" onclick="removerTurma('${existingId}', event)">Remover</a></td>
+            `;
+            tableBody.appendChild(row);
+        }
+        
+        function removerTurma(rowId, event) {
+            event.preventDefault();
+            document.getElementById(rowId).remove();
+            
+            const tableBody = document.getElementById('selected-table-body');
+            if (tableBody.children.length === 0) {
+                tableBody.innerHTML = '<tr id="no-selected-row"><td colspan="4" style="text-align: center; color: #777;">Nenhuma turma selecionada.</td></tr>';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Matrícula On-Line - Seleção de Turmas</h2>
+            <div class="warning-tag">AMBIENTE SIMULADO</div>
+        </div>
+        
+        <form onsubmit="realizarBusca(event)">
+            <div class="search-box">
+                <div class="form-group">
+                    <label for="form:codigo">Código do Componente Curricular</label>
+                    <input type="text" name="form:codigo" id="form:codigo" placeholder="Digite ex: CIC0004, MAT0025 ou EST0023" required autocomplete="off">
+                </div>
+                <input type="submit" id="btn-buscar" value="Buscar">
+            </div>
+        </form>
+        
+        <!-- Resultados Simulados -->
+        
+        <!-- CIC0004 -->
+        <div class="result-section" id="result-CIC0004">
+            <h4>Componente: CIC0004 - ALGORITMOS E PROGRAMAÇÃO DE COMPUTADORES</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Turma</th>
+                        <th>Horário</th>
+                        <th>Vagas Disp.</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Turma A</td>
+                        <td>35M34</td>
+                        <td>12</td>
+                        <td><a href="#" class="action-link" title="Selecionar" onclick="adicionarTurma('CIC0004', 'A', event)">Selecionar Turma</a></td>
+                    </tr>
+                    <tr>
+                        <td>Turma B</td>
+                        <td>35T45</td>
+                        <td>5</td>
+                        <td><a href="#" class="action-link" title="Selecionar" onclick="adicionarTurma('CIC0004', 'B', event)">Selecionar Turma</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- MAT0025 -->
+        <div class="result-section" id="result-MAT0025">
+            <h4>Componente: MAT0025 - CÁLCULO 1</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Turma</th>
+                        <th>Horário</th>
+                        <th>Vagas Disp.</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Turma A</td>
+                        <td>246M12</td>
+                        <td>45</td>
+                        <td><a href="#" class="action-link" title="Selecionar" onclick="adicionarTurma('MAT0025', 'A', event)">Selecionar Turma</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- EST0023 -->
+        <div class="result-section" id="result-EST0023">
+            <h4>Componente: EST0023 - PROBABILIDADE E ESTATÍSTICA</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Turma</th>
+                        <th>Horário</th>
+                        <th>Vagas Disp.</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Turma A</td>
+                        <td>24T23</td>
+                        <td>18</td>
+                        <td><a href="#" class="action-link" title="Selecionar" onclick="adicionarTurma('EST0023', 'A', event)">Selecionar Turma</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Grade de Turmas Selecionadas -->
+        <div class="selected-list">
+            <h3>Turmas Selecionadas</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Turma</th>
+                        <th>Horário/Tipo</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="selected-table-body">
+                    <tr id="no-selected-row">
+                        <td colspan="4" style="text-align: center; color: #777;">Nenhuma turma selecionada.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

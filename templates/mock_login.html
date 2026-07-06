@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnB - Central de Autenticação (SIMULADO)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 380px;
+            padding: 2rem;
+            border-top: 5px solid #006633;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header h2 {
+            margin: 0;
+            color: #006633;
+        }
+        .header p {
+            color: #666;
+            font-size: 0.85rem;
+            margin: 5px 0 0 0;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        label {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .captcha-area {
+            background: #eee;
+            padding: 0.5rem;
+            text-align: center;
+            font-weight: bold;
+            font-family: monospace;
+            letter-spacing: 5px;
+            font-size: 1.2rem;
+            border: 1px dashed #bbb;
+            user-select: none;
+            margin: 0.5rem 0;
+        }
+        .btn-submit {
+            background-color: #006633;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            width: 100%;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .btn-submit:hover {
+            background-color: #004d26;
+        }
+        .warning-banner {
+            background: #fff3cd;
+            color: #856404;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="warning-banner">
+            <strong>AMBIENTE SIMULADO (FINS DIDÁTICOS)</strong>
+        </div>
+        <div class="header">
+            <h2>Autenticação Unificada</h2>
+            <p>Serviço de Login Central - Universidade de Brasília</p>
+        </div>
+        
+        <form action="/mock/login" method="POST">
+            <div class="form-group">
+                <label for="username">Usuário (Matrícula ou CPF)</label>
+                <input type="text" id="username" name="username" required autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Desafio CAPTCHA</label>
+                <div class="captcha-area">UNB123</div>
+                <input type="text" id="captcha" placeholder="Digite os caracteres acima" required autocomplete="off">
+            </div>
+            
+            <input class="btn-submit" name="submit" type="submit" value="ENTRAR">
+        </form>
+    </div>
+</body>
+</html>
