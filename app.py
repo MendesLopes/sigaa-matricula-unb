@@ -26,6 +26,27 @@ class AutomationState:
 
 state = AutomationState()
 
+# Grade Curricular de Ciência da Computação (UnB) com pré-requisitos para recomendação
+CURRICULUM_CS = [
+    # 1º Semestre
+    {"code": "CIC0004", "name": "Algoritmos e Programação de Computadores (APC)", "semester": 1, "prereqs": []},
+    {"code": "MAT0025", "name": "Cálculo 1", "semester": 1, "prereqs": []},
+    {"code": "CIC0003", "name": "Introdução aos Sistemas Computacionais (ISC)", "semester": 1, "prereqs": []},
+    {"code": "MAT0031", "name": "Introdução à Álgebra Linear (IAL)", "semester": 1, "prereqs": []},
+    
+    # 2º Semestre
+    {"code": "CIC0090", "name": "Estruturas de Dados (ED)", "semester": 2, "prereqs": ["CIC0004"]},
+    {"code": "MAT0026", "name": "Cálculo 2", "semester": 2, "prereqs": ["MAT0025"]},
+    {"code": "CIC0099", "name": "Organização e Arq. de Computadores (OAC)", "semester": 2, "prereqs": ["CIC0003"]},
+    {"code": "EST0023", "name": "Probabilidade e Estatística (PE)", "semester": 2, "prereqs": ["MAT0025"]},
+    
+    # 3º Semestre
+    {"code": "CIC0097", "name": "Bancos de Dados (BD)", "semester": 3, "prereqs": ["CIC0090"]},
+    {"code": "CIC0104", "name": "Software Básico (SB)", "semester": 3, "prereqs": ["CIC0099"]},
+    {"code": "CIC0124", "name": "Projeto e Análise de Algoritmos (PAA)", "semester": 3, "prereqs": ["CIC0090"]},
+    {"code": "MAT0034", "name": "Análise Numérica (AN)", "semester": 3, "prereqs": ["MAT0026", "MAT0031"]}
+]
+
 def log_msg(msg_type, message, status='running', enrollment_status=None):
     """Envia uma mensagem de log para a fila SSE."""
     data = {
@@ -270,7 +291,7 @@ def run_automation(username, password, delay, disciplines, mode='real'):
 @app.before_request
 def require_login():
     # Permite acesso ao login, arquivos estáticos e simulador sem autenticação do painel principal
-    if request.endpoint in ['login_gate', 'static', 'mock_login', 'mock_portal', 'mock_matricula', 'mock_selecao']:
+    if request.endpoint in ['login_gate', 'static', 'mock_login', 'mock_portal', 'mock_matricula', 'mock_selecao', 'mock_historico']:
         return
         
     if not session.get('authenticated'):
@@ -318,6 +339,155 @@ def mock_matricula():
 @app.route('/mock/selecao')
 def mock_selecao():
     return render_template('mock_selecao.html')
+
+@app.route('/mock/historico')
+def mock_historico():
+    return render_template('mock_historico.html')
+
+# --- ENDPOINTS DO RECOMENDADOR INTELIGENTE ---
+
+@app.route('/api/recommend', methods=['POST'])
+def recommend_courses():
+    data = request.json
+    completed = data.get('completed', [])
+    
+    recommended = []
+    for course in CURRICULUM_CS:
+        # Se o aluno já concluiu o curso, pula
+        if course['code'] in completed:
+            continue
+        
+        # Verifica se todos os pré-requisitos estão na lista de concluídos
+        prereqs_met = all(req in completed for req in course['prereqs'])
+        
+        if prereqs_met:
+            recommended.append(course)
+            
+    return jsonify({'recommended': recommended})
+
+def run_history_import(username, password, mode='real'):
+    """Executa a importação automática do histórico escolar do SIGAA via Playwright."""
+    global state
+    state.is_running = True
+    
+    log_msg('info', 'Iniciando navegador Playwright para ler histórico...')
+    
+    try:
+        with sync_playwright() as p:
+            state.playwright_instance = p
+            state.browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+            state.context = state.browser.new_context(no_viewport=True)
+            state.page = state.context.new_page()
+            
+            # Navega para login
+            if mode == 'didatico':
+                log_msg('info', 'Acessando portal de login SIMULADO (Modo Didático)...')
+                state.page.goto("http://127.0.0.1:5000/mock/login")
+                state.page.wait_for_selector("#username", timeout=15000)
+                state.page.fill("#username", username)
+                state.page.fill("#password", password)
+                state.page.fill("#captcha", "UNB123")
+                state.page.click(".btn-submit")
+            else:
+                log_msg('info', 'Acessando portal de autenticação unificada da UnB (Real)...')
+                state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
+                state.page.wait_for_selector("#username", timeout=15000)
+                state.page.fill("#username", username)
+                state.page.fill("#password", password)
+                log_msg('action', 'AÇÃO REQUERIDA: Preencha o CAPTCHA no navegador aberto e clique em "ENTRAR".')
+                
+            # Aguarda login
+            logged_in = False
+            for _ in range(120):
+                if not state.is_running:
+                    break
+                current_url = state.page.url
+                if "/mock/portal" in current_url or "/sigaa/portais/discente/" in current_url or state.page.locator("text=/Portal do Discente/i").count() > 0:
+                    logged_in = True
+                    break
+                time.sleep(1)
+                
+            if not logged_in or not state.is_running:
+                log_msg('error', 'Login não detectado ou processo interrompido.', 'error')
+                cleanup()
+                return
+                
+            log_msg('success', 'Login detectado! Acessando histórico acadêmico...')
+            time.sleep(1.5)
+            
+            # Navega até o histórico
+            if mode == 'didatico':
+                state.page.goto("http://127.0.0.1:5000/mock/historico")
+            else:
+                try:
+                    state.page.locator("text=/Ensino/i").first.hover()
+                    time.sleep(1.0)
+                    state.page.locator("text=/Consultas Gerais/i").first.hover()
+                    time.sleep(1.0)
+                    state.page.locator("text=/Consultar Histórico Acadêmico/i").first.click()
+                except Exception as e:
+                    log_msg('warning', f'Não foi possível navegar automaticamente pelo menu: {str(e)}')
+                    log_msg('action', 'Por favor, abra a consulta de Histórico Acadêmico no navegador.')
+            
+            # Lê disciplinas do histórico
+            state.page.wait_for_selector(".tabelaRelatorio", timeout=30000)
+            log_msg('info', 'Lendo tabela do histórico acadêmico...')
+            
+            completed_codes = []
+            rows = state.page.locator(".tabelaRelatorio tbody tr")
+            row_count = rows.count()
+            
+            for i in range(row_count):
+                row = rows.nth(i)
+                row_text = row.inner_text()
+                if "APROVADO" in row_text:
+                    # O código é a primeira coluna
+                    code_cell = row.locator("td").first.inner_text().strip()
+                    if code_cell and len(code_cell) >= 7:
+                        completed_codes.append(code_cell)
+            
+            log_msg('success', f'Histórico importado com sucesso! Encontradas {len(completed_codes)} matérias concluídas.')
+            log_queue.put({
+                'type': 'success',
+                'message': 'Disciplinas do histórico carregadas com sucesso!',
+                'status': 'history_imported',
+                'completed_codes': completed_codes
+            })
+            
+    except Exception as e:
+        log_msg('error', f'Erro ao ler histórico no navegador: {str(e)}', 'error')
+    finally:
+        cleanup()
+
+@app.route('/api/import-history', methods=['POST'])
+def import_history():
+    global state
+    if state.is_running:
+        return jsonify({'error': 'O robô já está em execução.'}), 400
+        
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    mode = data.get('mode', 'real')
+    
+    if not username or not password:
+        return jsonify({'error': 'Credenciais inválidas para login.'}), 400
+        
+    # Limpa fila de logs
+    while not log_queue.empty():
+        try:
+            log_queue.get_nowait()
+        except queue.Empty:
+            break
+            
+    state.thread = threading.Thread(
+        target=run_history_import,
+        args=(username, password, mode),
+        daemon=True
+    )
+    state.thread.start()
+    
+    return jsonify({'status': 'started'})
 
 @app.route('/api/start', methods=['POST'])
 def start_bot():

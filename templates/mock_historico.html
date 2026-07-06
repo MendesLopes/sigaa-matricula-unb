@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico Acadêmico (SIMULADO)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fa;
+            margin: 0;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 2px solid #0d47a1;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h2 {
+            margin: 0;
+            color: #0d47a1;
+        }
+        .warning-tag {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 1px solid #ffeeba;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        th {
+            background-color: #f1f3f5;
+            color: #333;
+        }
+        .aprovado {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .reprovado {
+            color: #c62828;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Histórico Acadêmico - Ciência da Computação</h2>
+            <div class="warning-tag">AMBIENTE SIMULADO</div>
+        </div>
+        
+        <p>Estudante: <strong>Aluno Didático de Teste</strong> | Matrícula: <strong>260000000</strong></p>
+        
+        <table class="tabelaRelatorio">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nome do Componente Curricular</th>
+                    <th>Semestre</th>
+                    <th>Nota</th>
+                    <th>Mencão</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>CIC0004</td>
+                    <td>ALGORITMOS E PROGRAMAÇÃO DE COMPUTADORES</td>
+                    <td>2026.1</td>
+                    <td>8.5</td>
+                    <td>MS</td>
+                    <td class="aprovado">APROVADO</td>
+                </tr>
+                <tr>
+                    <td>MAT0025</td>
+                    <td>CÁLCULO 1</td>
+                    <td>2026.1</td>
+                    <td>7.0</td>
+                    <td>MM</td>
+                    <td class="aprovado">APROVADO</td>
+                </tr>
+                <tr>
+                    <td>CIC0003</td>
+                    <td>INTRODUÇÃO AOS SISTEMAS COMPUTACIONAIS</td>
+                    <td>2026.1</td>
+                    <td>9.0</td>
+                    <td>SS</td>
+                    <td class="aprovado">APROVADO</td>
+                </tr>
+                <tr>
+                    <td>EST0023</td>
+                    <td>PROBABILIDADE E ESTATÍSTICA</td>
+                    <td>2026.1</td>
+                    <td>4.5</td>
+                    <td>MI</td>
+                    <td class="reprovado">REPROVADO</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

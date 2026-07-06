@@ -65,28 +65,71 @@
             </div>
         </div>
 
-        <!-- Lado Direito: Disciplinas e Terminal -->
+        <!-- Lado Direito: Disciplinas, Recomendador e Terminal -->
         <div class="card" style="display: flex; flex-direction: column; gap: 1.5rem;">
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div class="card-title" style="margin-bottom: 0;">
-                    Turmas Desejadas
+            <!-- Abas de Navegação -->
+            <div class="tabs">
+                <button type="button" class="tab-btn active" id="tab-direct">Matrícula Direta</button>
+                <button type="button" class="tab-btn" id="tab-recommender">Recomendador Inteligente</button>
+            </div>
+            
+            <!-- Conteúdo Aba 1: Matrícula Direta -->
+            <div id="content-direct" class="tab-content active">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="card-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+                        Turmas Desejadas
+                    </div>
+                    
+                    <div id="disciplines-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- Primeira linha padrão -->
+                        <div class="discipline-row">
+                            <input type="text" class="input-code" placeholder="Código (Ex: CIC0004)" required autocomplete="off">
+                            <input type="text" class="input-turma" placeholder="Turma (Ex: A)" required autocomplete="off">
+                            <button type="button" class="btn-icon" onclick="removeRow(this)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-add" id="btn-add-row">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Adicionar Disciplina
+                    </button>
                 </div>
-                
-                <div id="disciplines-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <!-- Primeira linha padrão -->
-                    <div class="discipline-row">
-                        <input type="text" class="input-code" placeholder="Código (Ex: CIC0004)" required autocomplete="off">
-                        <input type="text" class="input-turma" placeholder="Turma (Ex: A)" required autocomplete="off">
-                        <button type="button" class="btn-icon" onclick="removeRow(this)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
+            
+            <!-- Conteúdo Aba 2: Recomendador Inteligente -->
+            <div id="content-recommender" class="tab-content">
+                <div class="recommender-section">
+                    <!-- Importação / Histórico -->
+                    <div class="checklist-card">
+                        <div class="checklist-title">
+                            <span>Matérias Concluídas (Histórico)</span>
+                            <button type="button" class="btn-add" id="btn-import-history" style="padding: 0.4rem 0.8rem; margin: 0; font-size: 0.75rem; font-weight: bold; border-style: solid;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                Importar do SIGAA
+                            </button>
+                        </div>
+                        <div class="checklist-grid" id="checklist-subjects-grid">
+                            <!-- Preenchido via JS (Grade de Ciência da Computação) -->
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Recomendações -->
+                    <div class="recommended-container">
+                        <div class="card-title" style="margin-bottom: 0.25rem; border-bottom: none; padding-bottom: 0;">
+                            Grade Sugerida para o 2º Semestre
+                        </div>
+                        <div class="recommended-grid" id="recommended-subjects-grid">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0;">
+                                Preencha o checklist ou importe seu histórico acima para ver as sugestões.
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="btn-add-recommended" style="padding: 0.7rem; font-size: 0.85rem; margin-top: 0.5rem;" disabled>
+                            Adicionar Selecionadas à Matrícula
                         </button>
                     </div>
                 </div>
-
-                <button type="button" class="btn-add" id="btn-add-row">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    Adicionar Disciplina
-                </button>
             </div>
 
             <div class="console-container">
