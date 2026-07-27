@@ -462,6 +462,7 @@ def recommend_courses():
         if prereqs_met:
             recommended.append(course)
             
+    print(f"[DEBUG] recommend_courses: course_type={course_type}, completed={completed}, recommended={[r['code'] for r in recommended]}")
     return jsonify({'recommended': recommended})
 
 def run_history_import(username, password, mode='real'):
