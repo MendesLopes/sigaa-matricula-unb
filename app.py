@@ -43,8 +43,32 @@ CURRICULUM_CS = [
     # 3º Semestre
     {"code": "CIC0097", "name": "Bancos de Dados (BD)", "semester": 3, "prereqs": ["CIC0090"]},
     {"code": "CIC0104", "name": "Software Básico (SB)", "semester": 3, "prereqs": ["CIC0099"]},
-    {"code": "CIC0124", "name": "Projeto e Análise de Algoritmos (PAA)", "semester": 3, "prereqs": ["CIC0090"]},
-    {"code": "MAT0034", "name": "Análise Numérica (AN)", "semester": 3, "prereqs": ["MAT0026", "MAT0031"]}
+    {"code": "CIC0189", "name": "Projeto e Análise de Algoritmos (PAA)", "semester": 3, "prereqs": ["CIC0090"]},
+    {"code": "MAT0034", "name": "Análise Numérica (AN)", "semester": 3, "prereqs": ["MAT0026", "MAT0031"]},
+    
+    # 4º Semestre
+    {"code": "CIC0093", "name": "Linguagens de Programação (LP)", "semester": 4, "prereqs": ["CIC0090"]},
+    {"code": "CIC0124", "name": "Redes de Computadores (Redes)", "semester": 4, "prereqs": ["CIC0104"]},
+    {"code": "CIC0182", "name": "Lógica Computacional 1 (LC1)", "semester": 4, "prereqs": ["CIC0004"]},
+    {"code": "CIC0186", "name": "Teoria da Computação (TC)", "semester": 4, "prereqs": ["CIC0090"]},
+    
+    # 5º Semestre
+    {"code": "CIC0101", "name": "Engenharia de Software (ES)", "semester": 5, "prereqs": ["CIC0090"]},
+    {"code": "CIC0135", "name": "Introdução à Inteligência Artificial (IIA)", "semester": 5, "prereqs": ["CIC0090", "EST0023"]},
+    {"code": "CIC0188", "name": "Sistemas Operacionais (SO)", "semester": 5, "prereqs": ["CIC0104"]},
+    
+    # 6º Semestre
+    {"code": "CIC0169", "name": "Engenharia de Requisitos (ER)", "semester": 6, "prereqs": ["CIC0101"]},
+    {"code": "CIC0202", "name": "Programação Concorrente (PC)", "semester": 6, "prereqs": ["CIC0188"]},
+    {"code": "CIC0204", "name": "Computação Gráfica (CG)", "semester": 6, "prereqs": ["CIC0090", "MAT0031"]},
+    
+    # 7º Semestre
+    {"code": "CIC0203", "name": "Compiladores", "semester": 7, "prereqs": ["CIC0104", "CIC0186"]},
+    {"code": "CIC0205", "name": "Metodologia Científica (MC)", "semester": 7, "prereqs": ["CIC0101"]},
+    
+    # 8º Semestre
+    {"code": "CIC0206", "name": "Trabalho de Graduação 1 (TG1)", "semester": 8, "prereqs": ["CIC0205"]},
+    {"code": "CIC0207", "name": "Trabalho de Graduação 2 (TG2)", "semester": 8, "prereqs": ["CIC0206"]}
 ]
 
 def log_msg(msg_type, message, status='running', enrollment_status=None):
