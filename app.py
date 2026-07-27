@@ -564,8 +564,12 @@ def run_history_import(username, password, mode='real'):
                 is_approved = False
                 for j in range(cell_count):
                     cell_text = cells.nth(j).inner_text().strip().upper()
-                    # Verifica se a situação é de aprovação, dispensa ou aproveitamento acadêmico
-                    if cell_text in ["APROVADO", "DISPENSADO", "APROVEITADO", "EQUIVALÊNCIA"] or cell_text.startswith("APROVADO POR") or cell_text.startswith("APROVADO DE"):
+                    # Verifica menções de aprovação (SS, MS, MM, CC, AP) ou situações de aprovação (APROVADO, APROVADA, DISPENSADO, etc.)
+                    if (cell_text in ["SS", "MS", "MM", "CC", "AP", "DISPENSADO", "DISPENSADA", "APROVEITADO", "APROVEITADA", "EQUIVALÊNCIA"] or 
+                        cell_text.startswith("APROVADO") or 
+                        cell_text.startswith("APROVADA") or 
+                        cell_text.startswith("DISPENSAD") or 
+                        cell_text.startswith("APROVEITAD")):
                         is_approved = True
                         break
                 
@@ -584,6 +588,7 @@ def run_history_import(username, password, mode='real'):
                     if code_cell:
                         completed_codes.append(code_cell)
             
+            print(f"[DEBUG] Disciplinas concluidas extraidas do historico: {completed_codes}")
             log_msg('success', f'Histórico importado com sucesso! Encontradas {len(completed_codes)} matérias concluídas.')
             log_queue.put({
                 'type': 'success',
