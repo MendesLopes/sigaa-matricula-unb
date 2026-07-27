@@ -396,16 +396,17 @@ def mock_historico():
 @app.route('/api/recommend', methods=['POST'])
 def recommend_courses():
     data = request.json
-    completed = data.get('completed', [])
+    completed = [c.strip().upper().replace(" ", "") for c in data.get('completed', [])]
     
     recommended = []
     for course in CURRICULUM_CS:
         # Se o aluno já concluiu o curso, pula
-        if course['code'] in completed:
+        course_code = course['code'].strip().upper().replace(" ", "")
+        if course_code in completed:
             continue
         
         # Verifica se todos os pré-requisitos estão na lista de concluídos
-        prereqs_met = all(req in completed for req in course['prereqs'])
+        prereqs_met = all(req.strip().upper().replace(" ", "") in completed for req in course['prereqs'])
         
         if prereqs_met:
             recommended.append(course)
@@ -504,11 +505,32 @@ def run_history_import(username, password, mode='real'):
             
             for i in range(row_count):
                 row = rows.nth(i)
-                row_text = row.inner_text()
-                if "APROVADO" in row_text:
-                    # O código é a primeira coluna
-                    code_cell = row.locator("td").first.inner_text().strip()
-                    if code_cell and len(code_cell) >= 7:
+                cells = row.locator("td")
+                cell_count = cells.count()
+                if cell_count < 2:
+                    continue
+                
+                is_approved = False
+                for j in range(cell_count):
+                    cell_text = cells.nth(j).inner_text().strip().upper()
+                    # Verifica se a situação é de aprovação, dispensa ou aproveitamento acadêmico
+                    if cell_text in ["APROVADO", "DISPENSADO", "APROVEITADO", "EQUIVALÊNCIA"] or cell_text.startswith("APROVADO POR") or cell_text.startswith("APROVADO DE"):
+                        is_approved = True
+                        break
+                
+                if is_approved:
+                    code_cell = ""
+                    # Procura a primeira célula que se pareça com um código de disciplina (letras seguidas de números)
+                    for j in range(min(3, cell_count)):
+                        val = cells.nth(j).inner_text().strip().replace(" ", "").upper()
+                        if val and len(val) >= 6 and val[:3].isalpha() and val[-3:].isdigit():
+                            code_cell = val
+                            break
+                    
+                    if not code_cell:
+                        code_cell = cells.first.inner_text().strip().replace(" ", "").upper()
+                    
+                    if code_cell:
                         completed_codes.append(code_cell)
             
             log_msg('success', f'Histórico importado com sucesso! Encontradas {len(completed_codes)} matérias concluídas.')

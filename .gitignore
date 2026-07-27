@@ -10,3 +10,5 @@ ENV/
 .system_generated/
 *.log
 .git/
+user_data/
+

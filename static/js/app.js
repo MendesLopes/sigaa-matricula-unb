@@ -265,10 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
             cb.checked = false;
         });
 
-        // Marca as importadas
-        codes.forEach(code => {
-            const cb = document.querySelector(`.checklist-item-check[value="${code}"]`);
-            if (cb) {
+        // Normaliza os códigos importados
+        const normalizedCodes = codes.map(c => c.trim().toUpperCase().replace(/\s+/g, ''));
+
+        // Marca as importadas com verificação robusta
+        document.querySelectorAll('.checklist-item-check').forEach(cb => {
+            const val = cb.value.trim().toUpperCase().replace(/\s+/g, '');
+            if (normalizedCodes.includes(val)) {
                 cb.checked = true;
             }
         });
