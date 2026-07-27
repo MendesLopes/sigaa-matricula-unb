@@ -87,6 +87,11 @@ def cleanup():
     global state
     state.is_running = False
     try:
+        if state.context:
+            state.context.close()
+    except Exception:
+        pass
+    try:
         if state.browser:
             state.browser.close()
     except Exception:
@@ -106,42 +111,66 @@ def run_automation(username, password, delay, disciplines, mode='real'):
     try:
         with sync_playwright() as p:
             state.playwright_instance = p
-            # Inicia o navegador em modo visível (headed=True) para permitir resolução do captcha e visualização
-            state.browser = p.chromium.launch(headless=False, args=["--start-maximized"])
-            state.context = state.browser.new_context(no_viewport=True)
-            state.page = state.context.new_page()
+            
+            # Inicia o navegador com contexto persistente para manter a sessão (cookies, login, etc.) do usuário
+            user_data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data')
+            state.context = p.chromium.launch_persistent_context(
+                user_data_dir=user_data_path,
+                headless=False,
+                no_viewport=True,
+                args=["--start-maximized"]
+            )
+            state.page = state.context.pages[0] if state.context.pages else state.context.new_page()
+            
+            logged_in = False
             
             # 1. Navega para a página de login (Real ou Mock)
             if mode == 'didatico':
                 log_msg('info', 'Acessando portal de login SIMULADO (Modo Didático)...')
                 state.page.goto("http://127.0.0.1:5000/mock/login")
+                
+                # Aguarda carregar o campo de login
+                state.page.wait_for_selector("#username", timeout=30000)
+                
+                # Preenche os campos de credenciais
+                log_msg('info', 'Preenchendo matrícula/usuário e senha...')
+                state.page.fill("#username", username)
+                state.page.fill("#password", password)
+                log_msg('action', 'AÇÃO REQUERIDA: Preencha o CAPTCHA no navegador aberto e clique em "ENTRAR".')
             else:
-                log_msg('info', 'Acessando portal de autenticação unificada da UnB (Real)...')
-                state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
-            
-            # Aguarda carregar o campo de login
-            state.page.wait_for_selector("#username", timeout=30000)
-            
-            # Preenche os campos de credenciais
-            log_msg('info', 'Preenchendo matrícula/usuário e senha...')
-            state.page.fill("#username", username)
-            state.page.fill("#password", password)
-            
-            # Foca no campo de captcha se houver, ou apenas aguarda o login do usuário
-            log_msg('action', 'AÇÃO REQUERIDA: Preencha o CAPTCHA no navegador aberto e clique em "ENTRAR".')
-            
-            # Loop de espera pelo login (monitora se a URL mudou para o portal do discente ou se o botão sumiu)
-            logged_in = False
-            for _ in range(120):  # Espera por até 2 minutos (120 segundos)
-                if not state.is_running:
-                    break
+                log_msg('info', 'Verificando se já existe uma sessão ativa no SIGAA...')
+                state.page.goto("https://sigaa.unb.br/sigaa/portais/discente/discente.jsf")
+                time.sleep(2)
                 
                 current_url = state.page.url
-                # Verifica se entrou no SIGAA após login bem-sucedido
                 if "/sigaa/portais/discente/discente.jsf" in current_url or "/sigaa/portais/discente/index.jsf" in current_url or state.page.locator("text=/Portal do Discente/i").count() > 0:
+                    log_msg('success', 'Sessão ativa detectada no SIGAA! Login automático realizado.')
                     logged_in = True
-                    break
-                time.sleep(1)
+                else:
+                    log_msg('info', 'Nenhuma sessão ativa encontrada. Acessando página de autenticação...')
+                    state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
+                    
+                    # Aguarda carregar o campo de login
+                    state.page.wait_for_selector("#username", timeout=30000)
+                    
+                    # Preenche os campos de credenciais
+                    log_msg('info', 'Preenchendo matrícula/usuário e senha...')
+                    state.page.fill("#username", username)
+                    state.page.fill("#password", password)
+                    log_msg('action', 'AÇÃO REQUERIDA: Preencha o CAPTCHA no navegador aberto e clique em "ENTRAR".')
+            
+            # Loop de espera pelo login se ainda não estiver logado
+            if not logged_in:
+                for _ in range(120):  # Espera por até 2 minutos (120 segundos)
+                    if not state.is_running:
+                        break
+                    
+                    current_url = state.page.url
+                    # Verifica se entrou no SIGAA após login bem-sucedido
+                    if "/sigaa/portais/discente/discente.jsf" in current_url or "/sigaa/portais/discente/index.jsf" in current_url or state.page.locator("text=/Portal do Discente/i").count() > 0:
+                        logged_in = True
+                        break
+                    time.sleep(1)
                 
             if not state.is_running:
                 log_msg('warning', 'Processo interrompido pelo usuário.', 'stopped')
@@ -314,14 +343,8 @@ def run_automation(username, password, delay, disciplines, mode='real'):
 
 @app.before_request
 def require_login():
-    # Permite acesso ao login, arquivos estáticos e simulador sem autenticação do painel principal
-    if request.endpoint in ['login_gate', 'static', 'mock_login', 'mock_portal', 'mock_matricula', 'mock_selecao', 'mock_historico']:
-        return
-        
-    if not session.get('authenticated'):
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'Acesso não autorizado. Autentique-se primeiro.'}), 401
-        return redirect(url_for('login_gate'))
+    # Acesso direto desimpedido conforme pedido de uso pessoal exclusivo
+    session['authenticated'] = True
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_gate():
@@ -399,9 +422,18 @@ def run_history_import(username, password, mode='real'):
     try:
         with sync_playwright() as p:
             state.playwright_instance = p
-            state.browser = p.chromium.launch(headless=False, args=["--start-maximized"])
-            state.context = state.browser.new_context(no_viewport=True)
-            state.page = state.context.new_page()
+            
+            # Inicia o navegador com contexto persistente para manter a sessão (cookies, login, etc.) do usuário
+            user_data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user_data')
+            state.context = p.chromium.launch_persistent_context(
+                user_data_dir=user_data_path,
+                headless=False,
+                no_viewport=True,
+                args=["--start-maximized"]
+            )
+            state.page = state.context.pages[0] if state.context.pages else state.context.new_page()
+            
+            logged_in = False
             
             # Navega para login
             if mode == 'didatico':
@@ -413,23 +445,32 @@ def run_history_import(username, password, mode='real'):
                 state.page.fill("#captcha", "UNB123")
                 state.page.click(".btn-submit")
             else:
-                log_msg('info', 'Acessando portal de autenticação unificada da UnB (Real)...')
-                state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
-                state.page.wait_for_selector("#username", timeout=15000)
-                state.page.fill("#username", username)
-                state.page.fill("#password", password)
-                log_msg('action', 'AÇÃO REQUERIDA: Preencha o CAPTCHA no navegador aberto e clique em "ENTRAR".')
+                log_msg('info', 'Verificando se já existe uma sessão ativa no SIGAA...')
+                state.page.goto("https://sigaa.unb.br/sigaa/portais/discente/discente.jsf")
+                time.sleep(2)
+                
+                current_url = state.page.url
+                if "/sigaa/portais/discente/discente.jsf" in current_url or "/sigaa/portais/discente/index.jsf" in current_url or state.page.locator("text=/Portal do Discente/i").count() > 0:
+                    log_msg('success', 'Sessão ativa detectada no SIGAA! Login automático realizado.')
+                    logged_in = True
+                else:
+                    log_msg('info', 'Nenhuma sessão ativa encontrada. Acessando página de autenticação...')
+                    state.page.goto("https://autenticacao.unb.br/sso-server/login?service=https%3A%2F%2Fsig.unb.br%2Fsigaa%2Flogin%2Fcas")
+                    state.page.wait_for_selector("#username", timeout=15000)
+                    state.page.fill("#username", username)
+                    state.page.fill("#password", password)
+                    log_msg('action', 'AÇÃO REQUERIDA: Preencha o CAPTCHA no navegador aberto e clique em "ENTRAR".')
                 
             # Aguarda login
-            logged_in = False
-            for _ in range(120):
-                if not state.is_running:
-                    break
-                current_url = state.page.url
-                if "/mock/portal" in current_url or "/sigaa/portais/discente/" in current_url or state.page.locator("text=/Portal do Discente/i").count() > 0:
-                    logged_in = True
-                    break
-                time.sleep(1)
+            if not logged_in:
+                for _ in range(120):
+                    if not state.is_running:
+                        break
+                    current_url = state.page.url
+                    if "/mock/portal" in current_url or "/sigaa/portais/discente/" in current_url or state.page.locator("text=/Portal do Discente/i").count() > 0:
+                        logged_in = True
+                        break
+                    time.sleep(1)
                 
             if not logged_in or not state.is_running:
                 log_msg('error', 'Login não detectado ou processo interrompido.', 'error')
