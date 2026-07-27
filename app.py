@@ -71,6 +71,54 @@ CURRICULUM_CS = [
     {"code": "CIC0207", "name": "Trabalho de Graduação 2 (TG2)", "semester": 8, "prereqs": ["CIC0206"]}
 ]
 
+CURRICULUM_LIC = [
+    # 1º Semestre
+    {"code": "CIC0007", "name": "Introdução à Ciência da Computação (ICC)", "semester": 1, "prereqs": []},
+    {"code": "CIC0004", "name": "Algoritmos e Programação de Computadores (APC)", "semester": 1, "prereqs": []},
+    {"code": "MAT0031", "name": "Introdução à Álgebra Linear (IAL)", "semester": 1, "prereqs": []},
+    {"code": "CIC113492", "name": "Formação Docente em Computação (FDC)", "semester": 1, "prereqs": []},
+    {"code": "PAD194221", "name": "Organização da Educação Brasileira (OEB)", "semester": 1, "prereqs": []},
+    
+    # 2º Semestre
+    {"code": "CIC0090", "name": "Estruturas de Dados (ED)", "semester": 2, "prereqs": ["CIC0004"]},
+    {"code": "MAT0025", "name": "Cálculo 1", "semester": 2, "prereqs": []},
+    {"code": "CIC0099", "name": "Organização e Arq. de Computadores (OAC)", "semester": 2, "prereqs": ["CIC0007"]},
+    {"code": "TEF191027", "name": "Psicologia da Educação", "semester": 2, "prereqs": []},
+    
+    # 3º Semestre
+    {"code": "CIC0097", "name": "Bancos de Dados (BD)", "semester": 3, "prereqs": ["CIC0090"]},
+    {"code": "CIC0104", "name": "Software Básico (SB)", "semester": 3, "prereqs": ["CIC0099"]},
+    {"code": "MTC192015", "name": "Didática Fundamental", "semester": 3, "prereqs": []},
+    {"code": "MAT0026", "name": "Cálculo 2", "semester": 3, "prereqs": ["MAT0025"]},
+    
+    # 4º Semestre
+    {"code": "CIC0101", "name": "Engenharia de Software (ES)", "semester": 4, "prereqs": ["CIC0090"]},
+    {"code": "CIC0124", "name": "Redes de Computadores (Redes)", "semester": 4, "prereqs": ["CIC0104"]},
+    {"code": "CIC0182", "name": "Lógica Computacional 1 (LC1)", "semester": 4, "prereqs": ["CIC0004"]},
+    {"code": "CIC116858", "name": "Informática Aplicada à Educação (IAE)", "semester": 4, "prereqs": []},
+    
+    # 5º Semestre
+    {"code": "CIC0188", "name": "Sistemas Operacionais (SO)", "semester": 5, "prereqs": ["CIC0104"]},
+    {"code": "CIC121657", "name": "Prática Pedagógica em Computação 1", "semester": 5, "prereqs": ["CIC116858"]},
+    {"code": "EST0023", "name": "Probabilidade e Estatística (PE)", "semester": 5, "prereqs": ["MAT0025"]},
+    
+    # 6º Semestre
+    {"code": "CIC0202", "name": "Programação Concorrente (PC)", "semester": 6, "prereqs": ["CIC0188"]},
+    {"code": "CIC121665", "name": "Prática Pedagógica em Computação 2", "semester": 6, "prereqs": ["CIC121657"]},
+    {"code": "CIC0135", "name": "Introdução à Inteligência Artificial (IIA)", "semester": 6, "prereqs": ["CIC0090"]},
+    
+    # 7º Semestre
+    {"code": "CIC0181", "name": "Estágio Supervisionado em Licenciatura 1", "semester": 7, "prereqs": ["CIC121657"]},
+    {"code": "CIC0186", "name": "Teoria da Computação (TC)", "semester": 7, "prereqs": ["CIC0090"]},
+    
+    # 8º Semestre
+    {"code": "CIC0214", "name": "Estágio Supervisionado em Licenciatura 2", "semester": 8, "prereqs": ["CIC0181"]},
+    
+    # 9º Semestre
+    {"code": "CIC0215", "name": "Estágio Supervisionado em Licenciatura 3", "semester": 9, "prereqs": ["CIC0214"]}
+]
+
+
 def log_msg(msg_type, message, status='running', enrollment_status=None):
     """Envia uma mensagem de log para a fila SSE."""
     data = {
@@ -395,11 +443,14 @@ def mock_historico():
 
 @app.route('/api/recommend', methods=['POST'])
 def recommend_courses():
-    data = request.json
+    data = request.json or {}
     completed = [c.strip().upper().replace(" ", "") for c in data.get('completed', [])]
+    course_type = data.get('course_type', 'cs')  # 'cs' ou 'lic'
+    
+    curriculum = CURRICULUM_LIC if course_type == 'lic' else CURRICULUM_CS
     
     recommended = []
-    for course in CURRICULUM_CS:
+    for course in curriculum:
         # Se o aluno já concluiu o curso, pula
         course_code = course['code'].strip().upper().replace(" ", "")
         if course_code in completed:

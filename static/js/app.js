@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- CARREGAR GRADE CURRICULAR NO CHECKLIST ---
-    const curriculumSubjects = [
+    const curriculumCS = [
         { code: 'CIC0004', name: 'Algoritmos e Prog. de Computadores (APC)' },
         { code: 'MAT0025', name: 'Cálculo 1' },
         { code: 'CIC0003', name: 'Intro. aos Sistemas Computacionais (ISC)' },
@@ -66,9 +66,45 @@ document.addEventListener('DOMContentLoaded', () => {
         { code: 'CIC0207', name: 'Trabalho de Graduação 2 (TG2)' }
     ];
 
+    const curriculumLic = [
+        { code: 'CIC0007', name: 'Introdução à Ciência da Computação (ICC)' },
+        { code: 'CIC0004', name: 'Algoritmos e Prog. de Computadores (APC)' },
+        { code: 'MAT0031', name: 'Intro. à Álgebra Linear (IAL)' },
+        { code: 'CIC113492', name: 'Formação Docente em Computação (FDC)' },
+        { code: 'PAD194221', name: 'Org. da Educação Brasileira (OEB)' },
+        { code: 'CIC0090', name: 'Estruturas de Dados (ED)' },
+        { code: 'MAT0025', name: 'Cálculo 1' },
+        { code: 'CIC0099', name: 'Org. e Arq. de Computadores (OAC)' },
+        { code: 'TEF191027', name: 'Psicologia da Educação' },
+        { code: 'CIC0097', name: 'Bancos de Dados (BD)' },
+        { code: 'CIC0104', name: 'Software Básico (SB)' },
+        { code: 'MTC192015', name: 'Didática Fundamental' },
+        { code: 'MAT0026', name: 'Cálculo 2' },
+        { code: 'CIC0101', name: 'Engenharia de Software (ES)' },
+        { code: 'CIC0124', name: 'Redes de Computadores (Redes)' },
+        { code: 'CIC0182', name: 'Lógica Computacional 1 (LC1)' },
+        { code: 'CIC116858', name: 'Info. Aplicada à Educação (IAE)' },
+        { code: 'CIC0188', name: 'Sistemas Operacionais (SO)' },
+        { code: 'CIC121657', name: 'Prática Pedagógica em Comp. 1' },
+        { code: 'EST0023', name: 'Probabilidade e Estatística (PE)' },
+        { code: 'CIC0202', name: 'Programação Concorrente (PC)' },
+        { code: 'CIC121665', name: 'Prática Pedagógica em Comp. 2' },
+        { code: 'CIC0135', name: 'Intro. à Inteligência Artificial (IIA)' },
+        { code: 'CIC0181', name: 'Estágio Supervisionado 1' },
+        { code: 'CIC0186', name: 'Teoria da Computação (TC)' },
+        { code: 'CIC0214', name: 'Estágio Supervisionado 2' },
+        { code: 'CIC0215', name: 'Estágio Supervisionado 3' }
+    ];
+
+    function getSelectedCurriculum() {
+        const courseType = document.getElementById('course-type').value;
+        return courseType === 'lic' ? curriculumLic : curriculumCS;
+    }
+
     function renderChecklist() {
         checklistGrid.innerHTML = '';
-        curriculumSubjects.forEach(sub => {
+        const subjects = getSelectedCurriculum();
+        subjects.forEach(sub => {
             const label = document.createElement('label');
             label.className = 'checkbox-label';
             label.innerHTML = `
@@ -81,18 +117,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Escuta mudança de curso para atualizar o checklist
+    document.getElementById('course-type').addEventListener('change', () => {
+        renderChecklist();
+        updateRecommendations();
+    });
+
     // --- CHAMADA À API DE RECOMENDAÇÃO ---
     async function updateRecommendations() {
         const completed = [];
         document.querySelectorAll('.checklist-item-check:checked').forEach(cb => {
             completed.push(cb.value);
         });
+        const course_type = document.getElementById('course-type').value;
 
         try {
             const response = await fetch('/api/recommend', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ completed })
+                body: JSON.stringify({ completed, course_type })
             });
             const data = await response.json();
             renderRecommendations(data.recommended || []);
